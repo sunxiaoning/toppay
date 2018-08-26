@@ -19,7 +19,9 @@ android {
 }
 
 dependencies {
-    compile 'cn.trinea.android.common:trinea-android-common:4.2.15'
+    api 'com.sky.platform-framework-common:0.0.1-SNAPSHOT'
+    api 'com.google.guava:guava:26.0-android'
+    api 'cn.trinea.android.common:trinea-android-common:4.2.15'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support:design:27.1.1'

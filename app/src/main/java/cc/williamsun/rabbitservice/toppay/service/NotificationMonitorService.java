@@ -12,6 +12,11 @@ import java.util.Arrays;
 
 import cn.trinea.android.common.util.StringUtils;
 
+/**
+ * 功能：收款通知监听
+ * @author sunxiaoning
+ * @date 2018/08/26
+ */
 @SuppressLint("NewApi")
 public class NotificationMonitorService extends NotificationListenerService {
 
@@ -90,6 +95,7 @@ public class NotificationMonitorService extends NotificationListenerService {
         if(payeeAmount.compareTo(new BigDecimal(MIN_AMOUNT)) < 0){
             return;
         }
+
 
     }
 }
