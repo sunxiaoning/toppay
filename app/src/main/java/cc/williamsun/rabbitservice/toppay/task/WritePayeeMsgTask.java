@@ -2,6 +2,7 @@ package cc.williamsun.rabbitservice.toppay.task;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
@@ -89,49 +90,55 @@ public class WritePayeeMsgTask extends AsyncTask<Void,Void,Void>{
         PayeeMsgDao payeeMsgDao = new PayeeMsgDao(context);
         payeeMsgDao.savePayeeMsg(payeeMsg);
         if(NetWorkUtils.isNetworkConnected(context)){
-            Map<String,String> requestParam = new TreeMap<>();
-            requestParam.put(GatewayPostRequestConst.REQUEST_NO,String.valueOf(idGenerator.nextId()));
-            requestParam.put(GatewayPostRequestConst.SERVICE_URL,PAYEE_NOTIFY_URL);
-            requestParam.put(GatewayPostRequestConst.TIMESTAMP, DateUtil.formatDate(new Date(),DateUtil.longFormat));
-            requestParam.put(GatewayPostRequestConst.MERCHANT_NO,MERCHANT_NO);
-            Map<String,Object> bizContent = new TreeMap<>();
-            bizContent.put("payChannel",payeeMsg.getPayChannel());
-            bizContent.put("payeeAccountNo",PAYEE_ACCOUNT.get(payeeMsg.getPayChannel()));
-            bizContent.put("payer", StringUtils.isNotBlank(payeeMsg.getPayer())?payeeMsg.getPayer():"");
-            bizContent.put("successAmount",payeeMsg.getPayeeAmount());
-            bizContent.put("successTime",DateUtil.formatDate(new Date()));
-            byte [] digestBizContent;
-            try {
-                digestBizContent = RSAUtils.encryptByPublicKey(JacksonUtil.toJson(bizContent).getBytes("UTF-8"),ENCRYPT_KEY_CONFIG.get(EncryptKeyConst.PLATFORM_PUBLIC_KEY));
-            } catch (Exception e){
-                throw new PlatformRuntimeException("收款通知请求参数加密出错！",e);
-            }
-            requestParam.put(GatewayPostRequestConst.BIZ_CONTENT, Base64Utils.encode(digestBizContent));
-            String sign;
-            try {
-                sign = RSAUtils.sign(JacksonUtil.toJson(requestParam).getBytes("UTF-8"),ENCRYPT_KEY_CONFIG.get(EncryptKeyConst.CLIENT_PRIVATE_KEY));
-            } catch (Exception e){
-                throw new PlatformRuntimeException("收款通知请求参数加签名出错！",e);
-            }
-            requestParam.put(GatewayPostRequestConst.SIGN,sign);
-            for(String key : requestParam.keySet()){
-                try {
-                    requestParam.put(key,URLEncoder.encode(requestParam.get(key).toString(), "UTF-8"));
-                } catch (Exception e){
-                    e.printStackTrace();
-                    throw new PlatformRuntimeException("请求参数编码出错！");
-                }
-            }
-            String responseJson = HttpUtils.httpPostString(PAYEE_NOTIFY_URL,requestParam);
-            Map<String,String> responseMap = null;
-            if(StringUtils.isNotBlank(responseJson)){
-                responseMap = JacksonUtil.jsonToMap(responseJson, new TypeReference<Map<String, String>>() {
-                });
-            }
+            Map<String, String> responseMap = payeeMsgNotify();
             if(MapUtils.isNotEmpty(responseMap) && responseMap.get("bizStatus").equals("S")){
                 payeeMsgDao.removeCrime(payeeMsg);
             }
         }
         return null;
+    }
+
+    @Nullable
+    public Map<String, String> payeeMsgNotify() {
+        Map<String,String> requestParam = new TreeMap<>();
+        requestParam.put(GatewayPostRequestConst.REQUEST_NO,String.valueOf(idGenerator.nextId()));
+        requestParam.put(GatewayPostRequestConst.SERVICE_URL,PAYEE_NOTIFY_URL);
+        requestParam.put(GatewayPostRequestConst.TIMESTAMP, DateUtil.formatDate(new Date(),DateUtil.longFormat));
+        requestParam.put(GatewayPostRequestConst.MERCHANT_NO,MERCHANT_NO);
+        Map<String,Object> bizContent = new TreeMap<>();
+        bizContent.put("payChannel",payeeMsg.getPayChannel());
+        bizContent.put("payeeAccountNo",PAYEE_ACCOUNT.get(payeeMsg.getPayChannel()));
+        bizContent.put("payer", StringUtils.isNotBlank(payeeMsg.getPayer())?payeeMsg.getPayer():"");
+        bizContent.put("successAmount",payeeMsg.getPayeeAmount());
+        bizContent.put("successTime",DateUtil.formatDate(new Date()));
+        byte [] digestBizContent;
+        try {
+            digestBizContent = RSAUtils.encryptByPublicKey(JacksonUtil.toJson(bizContent).getBytes("UTF-8"),ENCRYPT_KEY_CONFIG.get(EncryptKeyConst.PLATFORM_PUBLIC_KEY));
+        } catch (Exception e){
+            throw new PlatformRuntimeException("收款通知请求参数加密出错！",e);
+        }
+        requestParam.put(GatewayPostRequestConst.BIZ_CONTENT, Base64Utils.encode(digestBizContent));
+        String sign;
+        try {
+            sign = RSAUtils.sign(JacksonUtil.toJson(requestParam).getBytes("UTF-8"),ENCRYPT_KEY_CONFIG.get(EncryptKeyConst.CLIENT_PRIVATE_KEY));
+        } catch (Exception e){
+            throw new PlatformRuntimeException("收款通知请求参数加签名出错！",e);
+        }
+        requestParam.put(GatewayPostRequestConst.SIGN,sign);
+        for(String key : requestParam.keySet()){
+            try {
+                requestParam.put(key, URLEncoder.encode(requestParam.get(key).toString(), "UTF-8"));
+            } catch (Exception e){
+                e.printStackTrace();
+                throw new PlatformRuntimeException("请求参数编码出错！");
+            }
+        }
+        String responseJson = HttpUtils.httpPostString(PAYEE_NOTIFY_URL,requestParam);
+        Map<String,String> responseMap = null;
+        if(StringUtils.isNotBlank(responseJson)){
+            responseMap = JacksonUtil.jsonToMap(responseJson, new TypeReference<Map<String, String>>() {
+            });
+        }
+        return responseMap;
     }
 }
