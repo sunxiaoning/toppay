@@ -1,6 +1,5 @@
 package cc.williamsun.rabbitservice.toppay.service;
 
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
@@ -9,7 +8,12 @@ import android.util.Log;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.UUID;
 
+import cc.williamsun.focuscr.util.DateUtil;
+import cc.williamsun.rabbitservice.toppay.message.PayeeMsg;
+import cc.williamsun.rabbitservice.toppay.task.WritePayeeMsgTask;
 import cn.trinea.android.common.util.StringUtils;
 
 /**
@@ -17,7 +21,6 @@ import cn.trinea.android.common.util.StringUtils;
  * @author sunxiaoning
  * @date 2018/08/26
  */
-@SuppressLint("NewApi")
 public class NotificationMonitorService extends NotificationListenerService {
 
     public static final String WECHAT_NOTIFY_PKG = "com.tencent.mm";
@@ -75,9 +78,12 @@ public class NotificationMonitorService extends NotificationListenerService {
         if(notificationPkg.equals(ALI_NOTIFY_PKG) && (notificationText.lastIndexOf(ALI_NOTIFY_PREFIX) < 0 || notificationText.lastIndexOf(ALI_NOTIFY_SUFFIX) < 0)){
             return;
         }
+        String payChannel = null;
         if(notificationPkg.equals(WECHAT_NOTIFY_PKG)){
+            payChannel = "WECHATPAY";
             payeeAmountText = notificationText.substring(notificationText.lastIndexOf(WECHAT_NOTIFY_PREFIX) + WECHAT_NOTIFY_PREFIX.length(),notificationText.lastIndexOf(WECHAT_NOTIFY_SUFFIX));
         } else if(notificationPkg.equals(ALI_NOTIFY_PKG)){
+            payChannel = "ALIPAY";
             if(notificationText.lastIndexOf(WECHAT_NOTIFY_PREFIX) < 0 || notificationText.lastIndexOf(WECHAT_NOTIFY_SUFFIX) < 0){
                 return;
             }
@@ -95,7 +101,14 @@ public class NotificationMonitorService extends NotificationListenerService {
         if(payeeAmount.compareTo(new BigDecimal(MIN_AMOUNT)) < 0){
             return;
         }
-
-
+        PayeeMsg payeeMsg = new PayeeMsg();
+        payeeMsg.setUuid(UUID.randomUUID().toString().replaceAll("-",""));
+        payeeMsg.setPayer(payer);
+        payeeMsg.setPayeeAmount(payeeAmount.toString());
+        payeeMsg.setPayeeDateTime(DateUtil.formatDate(new Date()));
+        if(org.apache.commons.lang3.StringUtils.isNotBlank(payChannel)){
+            payeeMsg.setPayChannel(payChannel);
+        }
+        new WritePayeeMsgTask(getApplicationContext(),payeeMsg).execute();
     }
 }
