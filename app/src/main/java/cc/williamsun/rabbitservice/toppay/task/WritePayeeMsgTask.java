@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
 
+import cc.williamsun.focuscr.constant.PlatformStatusCode;
 import cc.williamsun.focuscr.exception.PlatformRuntimeException;
 import cc.williamsun.focuscr.util.Base64Utils;
 import cc.williamsun.focuscr.util.DateUtil;
@@ -91,7 +92,7 @@ public class WritePayeeMsgTask extends AsyncTask<Void,Void,Void>{
         payeeMsgDao.savePayeeMsg(payeeMsg);
         if(NetWorkUtils.isNetworkConnected(context)){
             Map<String, String> responseMap = payeeMsgNotify();
-            if(MapUtils.isNotEmpty(responseMap) && responseMap.get("bizStatus").equals("S")){
+            if(MapUtils.isNotEmpty(responseMap) && responseMap.get("responseCode").equals(PlatformStatusCode.SUCCESS) && responseMap.get("bizStatus").equals("S")){
                 payeeMsgDao.removeCrime(payeeMsg);
             }
         }
