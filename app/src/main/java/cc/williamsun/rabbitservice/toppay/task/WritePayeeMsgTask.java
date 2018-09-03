@@ -107,8 +107,8 @@ public class WritePayeeMsgTask extends AsyncTask<Void,Void,Void>{
         requestParam.put(GatewayPostRequestConst.TIMESTAMP, DateUtil.formatDate(new Date(),DateUtil.longFormat));
         requestParam.put(GatewayPostRequestConst.MERCHANT_NO,MERCHANT_NO);
         Map<String,Object> bizContent = new TreeMap<>();
-        bizContent.put("payChannel",payeeMsg.getPayChannel());
-        bizContent.put("payeeAccountNo",PAYEE_ACCOUNT.get(payeeMsg.getPayChannel()));
+        bizContent.put("payChannel",PayChannelEnum.parseByName(payeeMsg.getPayChannel()));
+        bizContent.put("payeeAccountNo",PAYEE_ACCOUNT.get(PayChannelEnum.parseByName(payeeMsg.getPayChannel())));
         bizContent.put("payer", StringUtils.isNotBlank(payeeMsg.getPayer())?payeeMsg.getPayer():"");
         bizContent.put("successAmount",payeeMsg.getPayeeAmount());
         bizContent.put("successTime",DateUtil.formatDate(new Date()));
