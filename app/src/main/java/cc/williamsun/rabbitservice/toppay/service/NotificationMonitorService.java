@@ -6,6 +6,8 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
@@ -14,7 +16,6 @@ import java.util.UUID;
 import cc.williamsun.focuscr.util.DateUtil;
 import cc.williamsun.rabbitservice.toppay.message.PayeeMsg;
 import cc.williamsun.rabbitservice.toppay.task.WritePayeeMsgTask;
-import cn.trinea.android.common.util.StringUtils;
 
 /**
  * 功能：收款通知监听

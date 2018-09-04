@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.Date;
 import java.util.Map;
@@ -28,7 +29,11 @@ import cc.williamsun.rabbitservice.toppay.db.PayeeMsgDao;
 import cc.williamsun.rabbitservice.toppay.enums.PayChannelEnum;
 import cc.williamsun.rabbitservice.toppay.message.PayeeMsg;
 import cc.williamsun.rabbitservice.toppay.util.NetWorkUtils;
-import cn.trinea.android.common.util.HttpUtils;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * 功能：收款消息内容写入
@@ -106,8 +111,8 @@ public class WritePayeeMsgTask extends AsyncTask<Void,Void,Void>{
         requestParam.put(GatewayPostRequestConst.SERVICE_URL,PAYEE_NOTIFY_URL);
         requestParam.put(GatewayPostRequestConst.TIMESTAMP, DateUtil.formatDate(new Date(),DateUtil.longFormat));
         requestParam.put(GatewayPostRequestConst.MERCHANT_NO,MERCHANT_NO);
-        Map<String,Object> bizContent = new TreeMap<>();
-        bizContent.put("payChannel",PayChannelEnum.parseByName(payeeMsg.getPayChannel()));
+        Map<String,String> bizContent = new TreeMap<>();
+        bizContent.put("payChannel",payeeMsg.getPayChannel());
         bizContent.put("payeeAccountNo",PAYEE_ACCOUNT.get(PayChannelEnum.parseByName(payeeMsg.getPayChannel())));
         bizContent.put("payer", StringUtils.isNotBlank(payeeMsg.getPayer())?payeeMsg.getPayer():"");
         bizContent.put("successAmount",payeeMsg.getPayeeAmount());
@@ -126,15 +131,7 @@ public class WritePayeeMsgTask extends AsyncTask<Void,Void,Void>{
             throw new PlatformRuntimeException("收款通知请求参数加签名出错！",e);
         }
         requestParam.put(GatewayPostRequestConst.SIGN,sign);
-        for(String key : requestParam.keySet()){
-            try {
-                requestParam.put(key, URLEncoder.encode(requestParam.get(key).toString(), "UTF-8"));
-            } catch (Exception e){
-                e.printStackTrace();
-                throw new PlatformRuntimeException("请求参数编码出错！");
-            }
-        }
-        String responseJson = HttpUtils.httpPostString(PAYEE_NOTIFY_URL,requestParam);
+        String responseJson = post(PAYEE_NOTIFY_URL,JacksonUtil.toJson(requestParam));
         Map<String,String> responseMap = null;
         if(StringUtils.isNotBlank(responseJson)){
             responseMap = JacksonUtil.jsonToMap(responseJson, new TypeReference<Map<String, String>>() {
@@ -142,4 +139,29 @@ public class WritePayeeMsgTask extends AsyncTask<Void,Void,Void>{
         }
         return responseMap;
     }
+
+    /**
+     * post json
+     * @param url
+     * @param json
+     * @return
+     * @throws IOException
+     */
+    private String post(String url, String json) {
+        try {
+            OkHttpClient client = new OkHttpClient();
+            RequestBody body = RequestBody.create(MediaType.get("application/json; charset=utf-8"), json);
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(body)
+                    .build();
+            try (Response response = client.newCall(request).execute()) {
+                return response.body().string();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        throw new PlatformRuntimeException("post "+ url +"出错！");
+    }
+
 }
