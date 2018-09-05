@@ -3,6 +3,7 @@ package cc.williamsun.rabbitservice.toppay.task;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
+import android.widget.Toast;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
@@ -119,10 +120,12 @@ public class WritePayeeMsgTask extends AsyncTask<Void,Void,Void>{
         bizContent.put("successTime",DateUtil.formatDate(new Date()));
         byte [] digestBizContent;
         try {
+            RSAUtils.CUSTOM_ALGORITHM = "RSA/ECB/PKCS1Padding";
             digestBizContent = RSAUtils.encryptByPublicKey(JacksonUtil.toJson(bizContent).getBytes("UTF-8"),ENCRYPT_KEY_CONFIG.get(EncryptKeyConst.PLATFORM_PUBLIC_KEY));
         } catch (Exception e){
             throw new PlatformRuntimeException("收款通知请求参数加密出错！",e);
         }
+        Toast toast = Toast.makeText(context, Base64Utils.encode(digestBizContent), Toast.LENGTH_LONG);
         requestParam.put(GatewayPostRequestConst.BIZ_CONTENT, Base64Utils.encode(digestBizContent));
         String sign;
         try {
