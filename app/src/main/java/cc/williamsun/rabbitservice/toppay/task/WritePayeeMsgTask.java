@@ -106,7 +106,7 @@ public class WritePayeeMsgTask extends AsyncTask<Void,Void,Void>{
 
     @Nullable
     public Map<String, String> payeeMsgNotify() {
-        Map<String,String> requestParam = new TreeMap<>();
+        Map<String,Object> requestParam = new TreeMap<>();
         requestParam.put(GatewayPostRequestConst.REQUEST_NO,String.valueOf(idGenerator.nextId()));
         requestParam.put(GatewayPostRequestConst.SERVICE_URL,PAYEE_NOTIFY_URL);
         requestParam.put(GatewayPostRequestConst.TIMESTAMP, DateUtil.formatDate(new Date(),DateUtil.longFormat));
