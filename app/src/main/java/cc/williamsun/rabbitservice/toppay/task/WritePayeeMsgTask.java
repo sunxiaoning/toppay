@@ -3,7 +3,6 @@ package cc.williamsun.rabbitservice.toppay.task;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
-import android.widget.Toast;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
@@ -12,7 +11,6 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
@@ -51,7 +49,7 @@ public class WritePayeeMsgTask extends AsyncTask<Void,Void,Void>{
     /**
      * 收款通知URL
      */
-    public static final String PAYEE_NOTIFY_URL = "http://gateway.williamsun.cc:7101/pay/platformPersonalPayCashier/platformPersonalPayCashier";
+    public static final String PAYEE_NOTIFY_URL = "http://gateway.williamsun.cc:7101/pay/platformPersonalPay/platformPersonalPayResultNotify";
 
     /**
      * 商户编号
